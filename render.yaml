@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: agenda-estudiantil-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: DATABASE_URL
+        sync: false
+      - key: ORIGENES_PERMITIDOS
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
