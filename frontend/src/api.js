@@ -1,4 +1,7 @@
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
+const API_PRODUCCION = 'https://agenda-estudiantil-api.onrender.com'
+const API_URL = (
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : API_PRODUCCION)
+).replace(/\/$/, '')
 const CLAVE_TOKEN = 'agenda_token'
 
 export const sesion = {
