@@ -46,7 +46,7 @@ múltiple, ambos basados en la materia, el tema y los apuntes que pegue el estud
 
 Usa la API **gratuita de Groq** (sin tarjeta): https://console.groq.com/keys → *Create API Key* → ponla como
 `GROQ_API_KEY` en Render (Environment) y en `backend/.env` para probar local. Si el modelo principal llega a su límite
-gratis, el backend cambia solo al modelo de respaldo (`IA_MODELOS`).
+gratis (o Groq lo retira), el backend cambia solo al modelo de respaldo (`IA_MODELOS`, por defecto `openai/gpt-oss-120b,openai/gpt-oss-20b`).
 
 ## Recordatorios
 

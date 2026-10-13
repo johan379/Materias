@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Asistente de estudio (gratis en https://console.groq.com/keys)
     groq_api_key: str = ""
     # Se prueban en orden: si el primero llega a su límite gratuito, se usa el siguiente
-    ia_modelos: str = "llama-3.3-70b-versatile,llama-3.1-8b-instant"
+    ia_modelos: str = "openai/gpt-oss-120b,openai/gpt-oss-20b"
 
     @property
     def modelos_ia(self) -> list[str]:

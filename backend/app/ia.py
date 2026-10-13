@@ -59,7 +59,10 @@ def completar(mensajes: list[dict], formato_json: bool = False) -> str:
 
     ultimo_error = "No se pudo contactar al asistente"
     for modelo in settings.modelos_ia:
-        cuerpo = {"model": modelo, "messages": mensajes, "temperature": 0.5, "max_tokens": 2048}
+        # max_tokens incluye el "razonamiento" interno de gpt-oss, por eso es amplio y el esfuerzo es bajo
+        cuerpo = {"model": modelo, "messages": mensajes, "temperature": 0.5, "max_tokens": 4096}
+        if modelo.startswith("openai/gpt-oss"):
+            cuerpo["reasoning_effort"] = "low"
         if formato_json:
             cuerpo["response_format"] = {"type": "json_object"}
         try:
@@ -73,9 +76,15 @@ def completar(mensajes: list[dict], formato_json: bool = False) -> str:
             ultimo_error = "No se pudo contactar al asistente, intenta de nuevo"
             continue
         if r.status_code == 200:
-            return r.json()["choices"][0]["message"]["content"]
+            contenido = r.json()["choices"][0]["message"].get("content")
+            if contenido:
+                return contenido
+            ultimo_error = "El asistente no alcanzó a responder, intenta de nuevo"
+            continue
         # 429 = límite gratuito alcanzado; 413 = mensaje muy largo para ese modelo; 5xx = falla temporal
-        if r.status_code in (413, 429) or r.status_code >= 500:
+        # 404/400 de modelo = Groq lo retiró o no lo ofrece gratis: se pasa al siguiente
+        if r.status_code in (404, 413, 429) or r.status_code >= 500 or "model" in r.text[:300].lower():
+            print(f"[ia] {modelo} respondió {r.status_code}: {r.text[:200]}", flush=True)
             ultimo_error = "El asistente está muy ocupado en este momento, intenta en un minuto"
             continue
         raise HTTPException(502, f"Error del asistente de IA ({r.status_code})")
