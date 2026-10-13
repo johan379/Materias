@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from . import models, schemas
+from . import ia, models, schemas
 from .auth import crear_token, hash_password, usuario_actual, verificar_password
 from .config import settings
 from .database import Base, engine, get_db
@@ -163,3 +163,30 @@ def editar_tarea(
 def borrar_tarea(tarea_id: int, usuario: models.Usuario = Depends(usuario_actual), db: Session = Depends(get_db)):
     db.delete(_tarea_del_usuario(db, tarea_id, usuario))
     db.commit()
+
+
+# ---------- Asistente de estudio (IA) ----------
+
+def _contexto_ia(datos: schemas.ContextoIA, usuario: models.Usuario, db: Session) -> str:
+    materia = _materia_del_usuario(db, datos.materia_id, usuario) if datos.materia_id is not None else None
+    tareas = db.scalars(select(models.Tarea).where(models.Tarea.usuario_id == usuario.id)).all() if materia else []
+    return ia.contexto_materia(materia, tareas, datos.tema, datos.apuntes)
+
+
+@app.post("/ia/chat", response_model=schemas.ChatIAOut)
+def chat_ia(datos: schemas.ChatIAIn, usuario: models.Usuario = Depends(usuario_actual), db: Session = Depends(get_db)):
+    sistema = ia.INSTRUCCIONES_TUTOR + f"\n\nEl estudiante se llama {usuario.nombre}."
+    contexto = _contexto_ia(datos, usuario, db)
+    if contexto:
+        sistema += "\n\n" + contexto
+    # Solo los últimos mensajes, para no gastar el límite gratuito con conversaciones largas
+    historial = [{"role": m.rol, "content": m.contenido} for m in datos.mensajes[-12:]]
+    return {"respuesta": ia.completar([{"role": "system", "content": sistema}, *historial])}
+
+
+@app.post("/ia/quiz", response_model=schemas.QuizIAOut)
+def quiz_ia(datos: schemas.QuizIAIn, usuario: models.Usuario = Depends(usuario_actual), db: Session = Depends(get_db)):
+    contexto = _contexto_ia(datos, usuario, db)
+    if not contexto:
+        raise HTTPException(400, "Elige una materia, escribe un tema o pega tus apuntes")
+    return {"preguntas": ia.generar_quiz(contexto, datos.cantidad)}

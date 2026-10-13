@@ -39,6 +39,15 @@ Abre http://localhost:5173
 
 > El plan gratis de Render se duerme tras 15 min sin uso: la primera petición puede tardar ~50 s.
 
+## Estudiar con IA
+
+Pestaña 🤖 con un **tutor** (chat que explica, hace preguntas y arma planes de estudio) y un **quiz** de selección
+múltiple, ambos basados en la materia, el tema y los apuntes que pegue el estudiante.
+
+Usa la API **gratuita de Groq** (sin tarjeta): https://console.groq.com/keys → *Create API Key* → ponla como
+`GROQ_API_KEY` en Render (Environment) y en `backend/.env` para probar local. Si el modelo principal llega a su límite
+gratis, el backend cambia solo al modelo de respaldo (`IA_MODELOS`).
+
 ## Recordatorios
 
 La app revisa cada 30 s las tareas con recordatorio y muestra una notificación del navegador

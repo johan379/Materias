@@ -5,6 +5,7 @@ import Calendario from './components/Calendario'
 import Horario from './components/Horario'
 import Tareas from './components/Tareas'
 import Materias from './components/Materias'
+import Estudiar from './components/Estudiar'
 import TareaForm from './components/TareaForm'
 import Modal from './components/Modal'
 import { useRecordatorios } from './recordatorios'
@@ -14,11 +15,13 @@ const PESTANAS = [
   { id: 'horario', texto: 'Horario', icono: '🕒' },
   { id: 'tareas', texto: 'Tareas', icono: '✅' },
   { id: 'materias', texto: 'Materias', icono: '📚' },
+  { id: 'estudiar', texto: 'Estudiar con IA', icono: '🤖' },
 ]
 
 export default function App() {
   const [usuario, setUsuario] = useState(null)
   const [cargando, setCargando] = useState(Boolean(sesion.token()))
+  const [errorConexion, setErrorConexion] = useState('')
   const [pestana, setPestana] = useState('calendario')
   const [materias, setMaterias] = useState([])
   const [tareas, setTareas] = useState([])
@@ -34,7 +37,8 @@ export default function App() {
     if (!sesion.token()) return
     api.yo()
       .then(async (u) => { setUsuario(u); await recargar() })
-      .catch(() => sesion.cerrar())
+      // Si falla por conexión, la sesión se conserva (solo un 401 la cierra, eso lo hace api.js)
+      .catch((e) => setErrorConexion(e.message))
       .finally(() => setCargando(false))
   }, [recargar])
 
@@ -80,7 +84,15 @@ export default function App() {
     setTareaEditando({ fecha_entrega: d.toISOString(), materia_id: materias[0]?.id ?? null, recordatorio_minutos: 1440 })
   }
 
-  if (cargando) return <div className="pantalla-centro">Cargando…</div>
+  if (cargando) return <div className="pantalla-centro">Cargando… (si el servidor estaba dormido puede tardar hasta un minuto)</div>
+  if (errorConexion) return (
+    <div className="pantalla-centro">
+      <div className="tarjeta">
+        <p>{errorConexion}</p>
+        <button className="btn btn-primario" onClick={() => window.location.reload()}>Reintentar</button>
+      </div>
+    </div>
+  )
   if (!usuario) return <Login onEntrar={entrar} />
 
   const props = { materias, tareas, onEditarTarea: setTareaEditando, onNuevaTarea: nuevaTarea, onAlternar: alternarCompletada }
@@ -109,6 +121,7 @@ export default function App() {
         {pestana === 'horario' && <Horario materias={materias} />}
         {pestana === 'tareas' && <Tareas {...props} />}
         {pestana === 'materias' && <Materias materias={materias} tareas={tareas} onCambio={recargar} />}
+        <div hidden={pestana !== 'estudiar'}><Estudiar materias={materias} /></div>
       </main>
 
       {tareaEditando && (

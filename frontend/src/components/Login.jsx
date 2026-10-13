@@ -15,11 +15,11 @@ export default function Login({ onEntrar }) {
     setEnviando(true)
     try {
       const datos = modo === 'login'
-        ? await api.login({ email: form.email, password: form.password })
-        : await api.registro(form)
+        ? await api.login({ email: form.email.trim(), password: form.password })
+        : await api.registro({ ...form, email: form.email.trim() })
       await onEntrar(datos)
     } catch (err) {
-      setError(err.message === 'Failed to fetch' ? 'No se pudo conectar con el servidor. Si acaba de despertar, intenta de nuevo en unos segundos.' : err.message)
+      setError(err.message)
     } finally {
       setEnviando(false)
     }
@@ -49,6 +49,7 @@ export default function Login({ onEntrar }) {
         <button className="btn btn-primario" disabled={enviando}>
           {enviando ? 'Un momento…' : modo === 'login' ? 'Entrar' : 'Crear cuenta'}
         </button>
+        {enviando && <p className="suave mini">Si el servidor estaba dormido, puede tardar hasta un minuto en responder.</p>}
         <button type="button" className="btn-link" onClick={() => { setModo(modo === 'login' ? 'registro' : 'login'); setError('') }}>
           {modo === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Entra'}
         </button>

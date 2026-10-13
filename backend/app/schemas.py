@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
@@ -75,3 +76,39 @@ class TareaIn(BaseModel):
 class TareaOut(TareaIn):
     model_config = ConfigDict(from_attributes=True)
     id: int
+
+
+# ---------- Asistente de estudio ----------
+
+class MensajeIA(BaseModel):
+    rol: Literal["user", "assistant"]
+    contenido: str = Field(min_length=1, max_length=4000)
+
+
+class ContextoIA(BaseModel):
+    materia_id: int | None = None
+    tema: str | None = Field(default=None, max_length=200)
+    apuntes: str | None = Field(default=None, max_length=8000)
+
+
+class ChatIAIn(ContextoIA):
+    mensajes: list[MensajeIA] = Field(min_length=1, max_length=40)
+
+
+class ChatIAOut(BaseModel):
+    respuesta: str
+
+
+class QuizIAIn(ContextoIA):
+    cantidad: int = Field(default=5, ge=3, le=10)
+
+
+class PreguntaQuiz(BaseModel):
+    pregunta: str
+    opciones: list[str]
+    correcta: int
+    explicacion: str
+
+
+class QuizIAOut(BaseModel):
+    preguntas: list[PreguntaQuiz]

@@ -8,6 +8,14 @@ class Settings(BaseSettings):
     secret_key: str = "desarrollo-no-usar-en-produccion"
     origenes_permitidos: str = "http://localhost:5173"
     token_horas: int = 24 * 30
+    # Asistente de estudio (gratis en https://console.groq.com/keys)
+    groq_api_key: str = ""
+    # Se prueban en orden: si el primero llega a su límite gratuito, se usa el siguiente
+    ia_modelos: str = "llama-3.3-70b-versatile,llama-3.1-8b-instant"
+
+    @property
+    def modelos_ia(self) -> list[str]:
+        return [m.strip() for m in self.ia_modelos.split(",") if m.strip()]
 
     @property
     def origenes(self) -> list[str]:

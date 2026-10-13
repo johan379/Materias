@@ -15,11 +15,22 @@ async function pedir(ruta, { method = 'GET', body } = {}) {
   const token = sesion.token()
   if (token) headers.Authorization = `Bearer ${token}`
 
-  const res = await fetch(`${API_URL}${ruta}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
+  // Render (plan gratis) se duerme: mientras despierta falla la conexión o responde 502/503/504.
+  // Se reintenta durante ~1 minuto en vez de mostrar error de una vez.
+  let res
+  for (let intento = 0; ; intento++) {
+    try {
+      res = await fetch(`${API_URL}${ruta}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+      if (![502, 503, 504].includes(res.status) || intento >= 6) break
+    } catch (e) {
+      if (intento >= 6) throw new Error('No se pudo conectar con el servidor. Revisa tu internet e intenta de nuevo.')
+    }
+    await new Promise((r) => setTimeout(r, 10000))
+  }
 
   if (res.status === 401 && token) {
     sesion.cerrar()
@@ -51,4 +62,7 @@ export const api = {
   crearTarea: (d) => pedir('/tareas', { method: 'POST', body: d }),
   editarTarea: (id, d) => pedir(`/tareas/${id}`, { method: 'PUT', body: d }),
   borrarTarea: (id) => pedir(`/tareas/${id}`, { method: 'DELETE' }),
+
+  chatIA: (d) => pedir('/ia/chat', { method: 'POST', body: d }),
+  quizIA: (d) => pedir('/ia/quiz', { method: 'POST', body: d }),
 }
