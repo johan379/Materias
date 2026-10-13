@@ -25,6 +25,9 @@ INSTRUCCIONES_QUIZ = """Eres un profesor que arma quices de práctica en españo
 Responde SOLO con un JSON con esta forma exacta:
 {"preguntas": [{"pregunta": "...", "opciones": ["...", "...", "...", "..."], "correcta": 0, "explicacion": "..."}]}
 - Cada pregunta tiene exactamente 4 opciones y "correcta" es el índice (0 a 3) de la opción correcta.
+- Solo UNA opción puede ser correcta: las otras tres deben ser claramente incorrectas
+  (por ejemplo, nunca pongas dos fracciones equivalentes o dos respuestas que signifiquen lo mismo).
+- Antes de responder, resuelve cada pregunta y verifica que "correcta" apunte a la opción correcta.
 - Varía la posición de la respuesta correcta.
 - La explicación dice en una o dos frases por qué esa es la respuesta.
 - Si hay apuntes del estudiante, las preguntas deben salir de ellos."""
